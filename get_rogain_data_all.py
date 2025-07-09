@@ -25,6 +25,14 @@ for idx, table in enumerate(tables):
         if not team:
             continue
 
+        team_no_cell = table.find("td", {"id": "c11"})
+        if not team_no_cell:
+            continue
+        
+        team_no =team_no_cell.get_text(strip=True).upper()
+        if not team_no:
+            continue
+
         # Try to get next table (results table)
         if idx + 1 >= len(tables):
             continue
@@ -32,12 +40,14 @@ for idx, table in enumerate(tables):
 
         # Extract data
         points = []
+        point_numbers = []
         times = []
         total_points = []
         total = 0
 
         rows = result_table.find_all("tr")
         points_row = None
+        point_numbers_row = None
         times_row = None
 
         for row in rows:
@@ -53,12 +63,15 @@ for idx, table in enumerate(tables):
                 for val in row_values
             ):
                 points_row = []
+                point_numbers_row = []
                 for val in row_values:
                     if val == "" or val.upper() == "META":
                         continue
                     try:
                         score = int(val.split("(")[-1].replace(")", ""))
                         points_row.append(score)
+                        point_number = int(val.split("(")[0])
+                        point_numbers_row.append(point_number)
                     except:
                         continue
 
@@ -80,19 +93,23 @@ for idx, table in enumerate(tables):
                         continue
 
                 if points_row is not None:
-                    for pt, ts in zip(points_row, times_row):
+                    for pt, pt_no, ts in zip(points_row, point_numbers_row, times_row):
                         points.append(pt)
+                        point_numbers.append(pt_no)
                         times.append(ts)
                         total += pt
                         total_points.append(total)
                     points_row = None
+                    point_numbers_row = None
                     times_row = None
 
         # Store team data
-        for pt, ts, tp in zip(points, times, total_points):
+        for pt, pt_no, ts, tp in zip(points, point_numbers, times, total_points):
             all_data.append({
                 "Team": team,
+                "No": team_no,
                 "Points": pt,
+                "Point No": pt_no,
                 "Time": ts,
                 "Total points": tp
             })
